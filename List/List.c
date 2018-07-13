@@ -77,7 +77,22 @@ void* GetElement(List* List, unsigned int Num)
     if(Num >= List->ElementCount)
         return 0;
 
+    __p_sig_fn_t pLastFn = signal(SIGSEGV, _BaseSignalProcessing);
 
+    void* Result = 0;
+
+    if(setjmp(BaseErrorProcessing) == 0)
+    {
+        Result = *((void**)_GetPage(List,Num) + Num % List->BlockSize);
+    }
+    else
+    {
+        signal(SIGSEGV, pLastFn);
+        return 0;
+    }
+
+    signal(SIGSEGV, pLastFn);
+    return Result;
 }
 
 void* _GetPage(List* List, unsigned int ElementNum)
@@ -110,12 +125,30 @@ void* _GetPage(List* List, unsigned int ElementNum)
 
 char _CheckFreeSpace(List* List)
 {
+    __p_sig_fn_t pLastFn = signal(SIGSEGV,_BaseSignalProcessing);
+    char Result = 0;
+    if(setjmp(BaseErrorProcessing) == 0)
+    {
+        if(List->ElementCount % List->BlockSize == 0)
+        {
+            if(_GetPage(List, List->ElementCount) - sizeof(void*) == 0)
+            {
+                Result = 1;
+            }
+        }
+        else
+        {
+            Result = 1;
+        }
+    }
 
+    signal(SIGSEGV, pLastFn);
+    return Result;
 }
 
 void* _CreateConstSizeBlock(List* List)
 {
-
+    void* Result = 0;
 }
 
 void _AddElementSignal(int signal)

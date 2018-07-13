@@ -32,6 +32,7 @@ char _CheckFreeSpace(List* List);
 
 void _AddElementSignal(int Signal);
 void _GetPageSignal(int Signal);
+void _BaseSignalProcessing(int Signal);
 
 void* _GetPage(List* List, unsigned int ElementNum);
 
