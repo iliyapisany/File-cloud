@@ -6,6 +6,10 @@
 
 List* CreateList(unsigned int ElementSize, unsigned int BlockSize)
 {
+    if(ElementSize == 0)
+    {
+        return 0;
+    }
     List* Result = malloc(sizeof(List));
 
     Result->DataEntryPoint = 0;
@@ -54,8 +58,8 @@ char AddElement(List* List, void* Element)
 
 
     // processing signal, when added element link isn't valid
-    __p_sig_fn_t LastFunc = signal(SIGSEGV, _AddElementSignal);
-    if(setjmp(AddElementJMP) == 0)
+    __p_sig_fn_t LastFunc = signal(SIGSEGV, _BaseSignalProcessing);
+    if(setjmp(BaseErrorProcessing) == 0)
     {
         // Copy element data to slot in list
         for(unsigned int i = 0; i < List->ElementSize; ++i)
@@ -68,6 +72,9 @@ char AddElement(List* List, void* Element)
         signal(SIGSEGV, LastFunc);
         return 0;
     }
+
+    ++List->ElementCount;
+
     signal(SIGSEGV, LastFunc);
     return 1;
 }
@@ -105,7 +112,7 @@ void* _GetPage(List* List, unsigned int ElementNum)
 
 
     // Processing error in segmentation list
-    __p_sig_fn_t pLastFn = signal(SIGSEGV, _GetPageSignal);
+    __p_sig_fn_t pLastFn = signal(SIGSEGV, _BaseSignalProcessing);
     if(setjmp(BaseErrorProcessing) == 0) {
         for (unsigned int i = 0; i < List->ElementCount / List->BlockSize; ++i) {
             Result = *((void **) Result);
@@ -131,7 +138,7 @@ char _CheckFreeSpace(List* List)
     {
         if(List->ElementCount % List->BlockSize == 0)
         {
-            if(_GetPage(List, List->ElementCount) - sizeof(void*) == 0)
+            if(_GetPage(List, List->ElementCount) - sizeof(void*) != 0)
             {
                 Result = 1;
             }
@@ -146,12 +153,22 @@ char _CheckFreeSpace(List* List)
     return Result;
 }
 
-void* _CreateConstSizeBlock(List* List)
+void _CreateConstSizeBlock(List* List)
 {
-    void* Result = 0;
+    __p_sig_fn_t pLastFn = signal(SIGSEGV, _BaseSignalProcessing);
+    if(setjmp(BaseErrorProcessing) == 0) {
+        void *Result = List->DataEntryPoint;
+
+        while (Result != 0) {
+            Result = *(void **) Result;
+        }
+
+        Result = malloc(sizeof(void *) + List->BlockSize * List->ElementSize);
+    }
+    signal(SIGSEGV, pLastFn);
 }
 
-void _AddElementSignal(int signal)
+void _BaseSignalProcessing(int Signal)
 {
-
+    longjmp(BaseErrorProcessing, 1);
 }

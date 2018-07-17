@@ -1,21 +1,38 @@
 #include <stdio.h>
-#include "List.h"
-#include <windows.h>d
+#include "library.h"
+#include <windows.h>
 
-typedef List* CPL(unsigned char a, unsigned int b);
 
 int main() {
-    HINSTANCE hLib = LoadLibrary(TEXT("Lib/libList.dll"));
+
+    HINSTANCE hLib = LoadLibrary("Lib/libList.dll");
     if(hLib == 0)
     {
-        printf("Error\n");
-        getchar();
         return 0;
     }
+    CreateIntList CreateIntList = GetProcAddress(hLib,"CreateIntList");
+    if(CreateIntList == 0)
+    {
+        return 0;
+    }
+    IntList_AddItem IntList_AddItem = GetProcAddress(hLib,"IntList_AddItem");
+    if(IntList_AddItem == 0)
+    {
+        return 0;
+    }
+    IntList_GetNum IntList_GetNum = GetProcAddress(hLib,"IntList_GetNum");
+    if(IntList_GetNum == 0)
+    {
+        return 0;
+    }
+    IntList* List = CreateIntList();
+    IntList_AddItem(List,13);
+    printf("%d\n",IntList_GetNum(List,0));
 
-    CPL* CreateList = GetProcAddress(hLib,TEXT("CreateList"));
+    //IntList* List = CreateIntList();
+    //IntList_AddItem(List,14);
+    //printf("%d\n",IntList_GetNum(List,0));
 
-    List* List = CreateList(0,LIST_LIB_DEFAULT_BLOCK_SIZE);
     printf("Hello, World!\n");
     return 0;
 }

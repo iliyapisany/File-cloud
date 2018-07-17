@@ -9,7 +9,6 @@
 #include <signal.h>
 #include <setjmp.h>
 
-jmp_buf AddElementJMP;
 jmp_buf BaseErrorProcessing;
 
 #define LiST_LIB_DYNAMIC_BLOCK_SIZE 0
@@ -24,14 +23,12 @@ char AddElement(List* List,void* Element);
 void* GetElement(List* List, unsigned int ElementNum);
 
 
-void* _CreateConstSizeBlock(List* List);
+void _CreateConstSizeBlock(List* List);
 //void* _CreateVarSizeBlock(List* List, unsigned int ElementCount, unsigned int ElementSize);
 
 char _CheckFreeSpace(List* List);
 
 
-void _AddElementSignal(int Signal);
-void _GetPageSignal(int Signal);
 void _BaseSignalProcessing(int Signal);
 
 void* _GetPage(List* List, unsigned int ElementNum);
