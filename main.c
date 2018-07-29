@@ -5,6 +5,7 @@
 
 int main() {
 
+//main func
     HINSTANCE hLib = LoadLibrary("Lib/libList.dll");
     if(hLib == 0)
     {
